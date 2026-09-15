@@ -1,3 +1,4 @@
+import logging
 import uuid
 from io import BytesIO
 
@@ -17,6 +18,8 @@ from app.services.validation import (
     validate_resize_spec,
     validate_upload_file,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -46,6 +49,7 @@ async def upload_images(
                 raise ValidationError(f"{file.filename}: could not read image dimensions")
             validated.append((file.filename, content_type, data, width_px, height_px))
     except ValidationError as e:
+        logger.info("Upload rejected: %s", e)
         raise HTTPException(status_code=400, detail=str(e))
 
     results = []

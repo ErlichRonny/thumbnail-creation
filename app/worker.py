@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from app.config import settings
 from app.constants import Preset
@@ -8,6 +9,8 @@ from app.services.image_processing import compute_thumbnail_dimensions, resize_i
 from app.services.repository import claim_pending_job, mark_done, mark_failed
 from app.services.storage import read_bytes, save_thumbnail
 from app.services.validation import ResizeSpec
+
+logger = logging.getLogger(__name__)
 
 
 def _resize_spec_from_image(image: Image) -> ResizeSpec:
@@ -21,6 +24,7 @@ async def process_one(session_factory=AsyncSessionLocal) -> bool:
         if image is None:
             return False
 
+        logger.info("Claimed job %s", image.id)
         try:
             data = read_bytes(image.original_storage_path)
             resize_spec = _resize_spec_from_image(image)
@@ -30,9 +34,11 @@ async def process_one(session_factory=AsyncSessionLocal) -> bool:
             thumbnail_bytes = resize_image(data, image.content_type, thumb_width, thumb_height)
             thumbnail_path = save_thumbnail(image.id, image.content_type, thumbnail_bytes)
             await mark_done(db, image, thumbnail_path, thumb_width, thumb_height)
+            logger.info("Job %s done: thumbnail %sx%s", image.id, thumb_width, thumb_height)
         except Exception as e:
             await db.rollback()
             await mark_failed(db, image, str(e))
+            logger.warning("Job %s failed: %s", image.id, e)
 
         return True
 
@@ -49,4 +55,5 @@ async def run(concurrency: int) -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     asyncio.run(run(settings.worker_concurrency))

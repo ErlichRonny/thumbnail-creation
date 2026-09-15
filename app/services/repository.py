@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants import ImageStatus
@@ -58,3 +58,20 @@ async def mark_failed(db: AsyncSession, image: Image, error_message: str) -> Non
     image.status = ImageStatus.FAILED
     image.error_message = error_message
     await db.commit()
+
+
+async def get_status_counts(db: AsyncSession) -> dict[ImageStatus, int]:
+    result = await db.execute(select(Image.status, func.count()).group_by(Image.status))
+    return dict(result.all())
+
+
+async def get_average_completion_seconds(db: AsyncSession) -> float | None:
+    # Measures upload-to-completion time (created_at -> updated_at for done
+    # rows), which includes time spent waiting in the queue, not just the
+    # worker's actual resize duration - the only breakdown we have data for.
+    result = await db.execute(
+        select(func.avg(func.extract("epoch", Image.updated_at - Image.created_at))).where(
+            Image.status == ImageStatus.DONE
+        )
+    )
+    return result.scalar_one_or_none()

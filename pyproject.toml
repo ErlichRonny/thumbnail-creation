@@ -12,6 +12,7 @@ dependencies = [
     "python-multipart",
     "alembic",
     "Pillow",
+    "prometheus_client",
 ]
 
 [project.optional-dependencies]
