@@ -18,7 +18,9 @@ class Image(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     status: Mapped[ImageStatus] = mapped_column(
-        SAEnum(ImageStatus, name="image_status"), nullable=False, default=ImageStatus.PENDING
+        SAEnum(ImageStatus, name="image_status", values_callable=lambda enum_cls: [member.value for member in enum_cls]),
+        nullable=False,
+        default=ImageStatus.PENDING,
     )
     original_file_name: Mapped[str] = mapped_column(String, nullable=False)
     original_storage_path: Mapped[str] = mapped_column(String, nullable=False)

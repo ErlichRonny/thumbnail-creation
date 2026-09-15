@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     max_files_per_request: int = 20
     min_custom_dimension: int = 1
     max_custom_dimension: int = 4000
+    worker_concurrency: int = 1
+    worker_poll_interval_seconds: float = 1.0
 
 
 settings = Settings()
