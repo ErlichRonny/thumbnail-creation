@@ -31,7 +31,15 @@ async def process_one(session_factory=AsyncSessionLocal) -> bool:
             thumb_width, thumb_height = compute_thumbnail_dimensions(
                 image.original_width, image.original_height, resize_spec
             )
-            thumbnail_bytes = resize_image(data, image.content_type, thumb_width, thumb_height)
+            # Run the CPU-bound resize on a worker thread instead of directly
+            # on the event loop: Pillow's resize releases the GIL during the
+            # actual pixel work, so this lets multiple worker_loop tasks in
+            # this process genuinely resize in parallel, rather than one
+            # resize call blocking every other task in the process until it
+            # returns.
+            thumbnail_bytes = await asyncio.to_thread(
+                resize_image, data, image.content_type, thumb_width, thumb_height
+            )
             thumbnail_path = save_thumbnail(image.id, image.content_type, thumbnail_bytes)
             await mark_done(db, image, thumbnail_path, thumb_width, thumb_height)
             logger.info("Job %s done: thumbnail %sx%s", image.id, thumb_width, thumb_height)
