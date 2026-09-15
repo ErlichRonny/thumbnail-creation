@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 from io import BytesIO
@@ -24,6 +25,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _read_image_dimensions(data: bytes) -> tuple[int, int]:
+    with PILImage.open(BytesIO(data)) as img:
+        return img.size
+
+
 @router.post("/images", status_code=202, response_model=list[ImageMetadata])
 async def upload_images(
     files: list[UploadFile] = File(...),
@@ -43,8 +49,11 @@ async def upload_images(
             data = await file.read()
             content_type = validate_upload_file(file.filename, data)
             try:
-                with PILImage.open(BytesIO(data)) as img:
-                    width_px, height_px = img.size
+                # Offload to a thread: reading dimensions is a synchronous,
+                # blocking PIL call, and running it directly here would block
+                # the whole event loop (and every other concurrent request)
+                # for its duration, especially across a batch of large files.
+                width_px, height_px = await asyncio.to_thread(_read_image_dimensions, data)
             except Exception:
                 raise ValidationError(f"{file.filename}: could not read image dimensions")
             validated.append((file.filename, content_type, data, width_px, height_px))

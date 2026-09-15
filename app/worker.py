@@ -4,6 +4,7 @@ import logging
 from app.config import settings
 from app.constants import Preset
 from app.db import AsyncSessionLocal
+from app.logging_config import configure_logging
 from app.models import Image
 from app.services.image_processing import compute_thumbnail_dimensions, resize_image
 from app.services.repository import claim_pending_job, mark_done, mark_failed
@@ -63,5 +64,5 @@ async def run(concurrency: int) -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    configure_logging()
     asyncio.run(run(settings.worker_concurrency))

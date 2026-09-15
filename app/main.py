@@ -2,10 +2,13 @@ import logging
 
 from fastapi import FastAPI
 
+from app.logging_config import configure_logging
 from app.metrics import REQUESTS_IN, REQUESTS_OUT
 from app.routers import health, images, metrics
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+configure_logging()
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Thumbnail Creation API")
 app.include_router(health.router)
@@ -23,4 +26,8 @@ async def track_request_counts(request, call_next):
     route = request.scope.get("route")
     path = route.path if route is not None else request.url.path
     REQUESTS_OUT.labels(method=request.method, path=path, status_code=response.status_code).inc()
+    logger.info(
+        "request completed",
+        extra={"http_method": request.method, "http_path": path, "http_status_code": response.status_code},
+    )
     return response
