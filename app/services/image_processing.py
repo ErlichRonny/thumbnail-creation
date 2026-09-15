@@ -2,7 +2,7 @@ from io import BytesIO
 
 from PIL import Image as PILImage
 
-from app.constants import PRESET_DIMENSIONS, Preset
+from app.constants import PRESET_DIMENSIONS
 from app.services.validation import ResizeSpec
 
 _PIL_FORMATS = {

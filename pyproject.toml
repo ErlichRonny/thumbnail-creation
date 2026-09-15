@@ -20,7 +20,11 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "httpx",
+    "ruff",
 ]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
 
 [build-system]
 requires = ["setuptools>=68"]

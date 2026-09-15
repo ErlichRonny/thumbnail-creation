@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Enum as SAEnum, Index, Integer, String, func
+from sqlalchemy import BigInteger, DateTime, Index, Integer, String, func
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 

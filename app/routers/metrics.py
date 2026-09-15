@@ -5,7 +5,11 @@ from starlette.responses import Response
 
 from app.constants import ImageStatus
 from app.db import get_db
-from app.metrics import IMAGE_AVG_COMPLETION_SECONDS, IMAGES_BY_STATUS, IMAGES_PROCESSED_TOTAL
+from app.metrics import (
+    IMAGE_AVG_COMPLETION_SECONDS,
+    IMAGES_BY_STATUS,
+    IMAGES_PROCESSED_TOTAL,
+)
 from app.services.repository import get_average_completion_seconds, get_status_counts
 
 router = APIRouter()
