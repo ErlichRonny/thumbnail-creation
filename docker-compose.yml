@@ -7,6 +7,18 @@ services:
       - .env
     depends_on:
       - postgres
+    volumes:
+      - image_storage:/data/storage
+
+  worker:
+    build: .
+    command: python -m app.worker
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    volumes:
+      - image_storage:/data/storage
 
   postgres:
     image: postgres:16
@@ -21,3 +33,4 @@ services:
 
 volumes:
   postgres_data:
+  image_storage:
