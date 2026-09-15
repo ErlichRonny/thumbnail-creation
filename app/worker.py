@@ -6,7 +6,7 @@ from app.db import AsyncSessionLocal
 from app.models import Image
 from app.services.image_processing import compute_thumbnail_dimensions, resize_image
 from app.services.repository import claim_pending_job, mark_done, mark_failed
-from app.services.storage import load_original, save_thumbnail
+from app.services.storage import read_bytes, save_thumbnail
 from app.services.validation import ResizeSpec
 
 
@@ -22,7 +22,7 @@ async def process_one(session_factory=AsyncSessionLocal) -> bool:
             return False
 
         try:
-            data = load_original(image.original_storage_path)
+            data = read_bytes(image.original_storage_path)
             resize_spec = _resize_spec_from_image(image)
             thumb_width, thumb_height = compute_thumbnail_dimensions(
                 image.original_width, image.original_height, resize_spec

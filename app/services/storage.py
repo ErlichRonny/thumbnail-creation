@@ -26,5 +26,5 @@ def save_thumbnail(image_id: uuid.UUID, content_type: str, data: bytes) -> str:
     return _save("thumbnails", image_id, content_type, data)
 
 
-def load_original(path: str) -> bytes:
+def read_bytes(path: str) -> bytes:
     return Path(path).read_bytes()

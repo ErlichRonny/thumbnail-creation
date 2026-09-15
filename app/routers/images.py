@@ -2,12 +2,14 @@ import uuid
 from io import BytesIO
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from PIL import Image as PILImage
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.constants import ImageStatus
 from app.db import get_db
 from app.schemas import ImageMetadata
-from app.services.repository import insert_image
+from app.services.repository import get_image_by_id, insert_image
 from app.services.storage import save_original
 from app.services.validation import (
     ValidationError,
@@ -67,3 +69,19 @@ async def upload_images(
         results.append(ImageMetadata.from_image(image))
 
     return results
+
+
+@router.get("/images/{image_id}", response_model=ImageMetadata)
+async def get_image_metadata(image_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    image = await get_image_by_id(db, image_id)
+    if image is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return ImageMetadata.from_image(image)
+
+
+@router.get("/images/{image_id}/file")
+async def get_image_file(image_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    image = await get_image_by_id(db, image_id)
+    if image is None or image.status != ImageStatus.DONE:
+        raise HTTPException(status_code=404, detail="Thumbnail not available")
+    return FileResponse(path=image.thumbnail_storage_path, media_type=image.content_type)
